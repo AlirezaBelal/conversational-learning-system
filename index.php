@@ -15,7 +15,8 @@ $database = new Medoo([
     'database_name' => $_ENV['DB_DATABASE'],
     'server' => $_ENV['DB_SERVER'],
     'username' => $_ENV['DB_USERNAME'],
-    'password' => $_ENV['DB_PASSWORD']
+    'password' => $_ENV['DB_PASSWORD'],
+    'charset' => 'utf8mb4',
 ]);
 
 $content = file_get_contents("php://input");
