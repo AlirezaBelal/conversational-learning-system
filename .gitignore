@@ -1,0 +1,15 @@
+# Ignore the .env file containing sensitive data
+.env
+
+# Ignore the vendor directory for Composer dependencies
+/vendor/
+
+# Ignore the logs directory
+/logs/
+
+# Ignore composer.lock in development environments
+composer.lock
+
+# Ignore IDE/editor specific files
+.vscode/
+.idea/
