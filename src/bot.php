@@ -90,7 +90,8 @@ function sendMessage($chat_id, $text)
     $data = [
         'chat_id' => $chat_id,
         'text' => $text,
-        'parse_mode' => 'Markdown'
+        'parse_mode' => 'Markdown',
+        'disable_web_page_preview' => true
     ];
 
     $options = [
