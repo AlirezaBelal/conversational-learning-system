@@ -50,6 +50,7 @@ function handleCommand($chat_id, $message)
         '/help' => __DIR__ . '/../commands/help.php',
         '/courses' => __DIR__ . '/../commands/courses.php',
         '/contact' => __DIR__ . '/../commands/contact.php',
+        '/interview' => __DIR__ . '/../commands/interview.php',
     ];
 
     // Check if it's a /start command
@@ -64,8 +65,8 @@ function handleCommand($chat_id, $message)
                 case 'contact':
                     require_once __DIR__ . '/../commands/' . $command . '.php';
                     break;
-                case 'quiz':
-                    sendMessage($chat_id, "آزمون دانش شما در حال شروع شدن است...");
+                case 'interview':
+                    require_once __DIR__ . '/../commands/interview.php';
                     break;
                 default:
                     sendMessage($chat_id, "پارامتر نامعتبر است. لطفاً از دستور /help استفاده کنید.");
