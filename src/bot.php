@@ -33,26 +33,54 @@ if (isset($update['message'])) {
         "received_at" => date("Y-m-d H:i:s")
     ]);
 
-    switch ($message) {
-        case '/start':
+    if (strpos($message, '/start') === 0) {
+        $params = explode(' ', $message);
+
+        if (isset($params[1])) {
+            $command = $params[1];
+
+            switch ($command) {
+                case 'help':
+                    require_once __DIR__ . '/../commands/help.php';
+                    break;
+
+                case 'courses':
+                    require_once __DIR__ . '/../commands/courses.php';
+                    break;
+
+                case 'contact':
+                    require_once __DIR__ . '/../commands/contact.php';
+                    break;
+
+                case 'quiz':
+                    sendMessage($chat_id, "آزمون دانش شما در حال شروع شدن است...");
+                    break;
+
+                default:
+                    sendMessage($chat_id, "پارامتر نامعتبر است. لطفاً از دستور /help استفاده کنید.");
+                    break;
+            }
+        } else {
             require_once __DIR__ . '/../commands/start.php';
-            break;
+        }
+    } else {
+        switch ($message) {
+            case '/help':
+                require_once __DIR__ . '/../commands/help.php';
+                break;
 
-        case '/help':
-            require_once __DIR__ . '/../commands/help.php';
-            break;
+            case '/courses':
+                require_once __DIR__ . '/../commands/courses.php';
+                break;
 
-        case '/courses':
-            require_once __DIR__ . '/../commands/courses.php';
-            break;
+            case '/contact':
+                require_once __DIR__ . '/../commands/contact.php';
+                break;
 
-        case '/contact':
-            require_once __DIR__ . '/../commands/contact.php';
-            break;
-
-        default:
-            sendMessage($chat_id, "دستور دریافت کردم: دستور ناشناخته. لطفاً از دستور `/help` استفاده کنید.");
-            break;
+            default:
+                sendMessage($chat_id, "دستور دریافت کردم: دستور ناشناخته. لطفاً از دستور /help استفاده کنید.");
+                break;
+        }
     }
 }
 
@@ -62,7 +90,7 @@ function sendMessage($chat_id, $text)
     $data = [
         'chat_id' => $chat_id,
         'text' => $text,
-        'parse_mode' => 'Markdown' // یا 'MarkdownV2' بسته به نیاز
+        'parse_mode' => 'Markdown'
     ];
 
     $options = [
@@ -81,4 +109,3 @@ function sendMessage($chat_id, $text)
         error_log("Error sending message to Telegram API.");
     }
 }
-
