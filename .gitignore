@@ -1,5 +1,5 @@
 # Ignore the .env file containing sensitive data
-.env
+config/.env
 
 # Ignore the vendor directory for Composer dependencies
 /vendor/
