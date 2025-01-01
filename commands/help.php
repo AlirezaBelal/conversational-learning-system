@@ -11,7 +11,7 @@ sendMessage($chat_id, "
 🔹 [شخصی‌سازی مسیر](https://t.me/acuLearn_bot?start=interview)  
    برای شخصی‌سازی مسیر یادگیری خودت، از این لینک استفاده کن.
 
-🔹 [راهبری در مسیر](https://t.me/acuLearn_bot?start=contact)  
+🔹 [راهبری در مسیر](https://t.me/acuLearn_bot?start=support)  
    اگر نیاز به راهنمایی داری یا سوالی پیش اومده، اینجا می‌تونی کمک بگیری.
 
 اگر سوالی داری یا کمکی نیاز داری، به [ادمین](https://t.me/maninickroshan) پیام بده.  
