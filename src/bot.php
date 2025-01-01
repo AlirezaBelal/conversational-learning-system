@@ -14,6 +14,7 @@ define('AI_API_URL', 'https://api.metisai.ir/api/session');
 define('AI_API_KEY', '8b7fdeec-fe02-4484-b85b-33c8fce34005');
 define('AI_SESSION_ID', 'your-session-id');
 
+// اتصال به پایگاه داده
 $database = new Medoo([
     'database_type' => 'mysql',
     'database_name' => $_ENV['DB_DATABASE'],
@@ -30,20 +31,55 @@ if (isset($update['message'])) {
     $chat_id = $update['message']['chat']['id'];
     $message = $update['message']['text'];
 
+    // ذخیره پیام کاربر در دیتابیس
     $database->insert("messages", [
         "chat_id" => $chat_id,
         "message_text" => $message,
         "received_at" => Medoo::raw('CURRENT_TIMESTAMP')
     ]);
 
+    // اطمینان از اینکه رکورد کاربر در جدول user_states وجود دارد
+    ensureUserExists($chat_id);
+
     handleUserState($chat_id, $message);
     handleCommand($chat_id, $message);
 }
+
+// بررسی وجود رکورد کاربر در جدول و ایجاد آن در صورت لزوم
+// بررسی وجود رکورد کاربر در جدول users و ایجاد آن در صورت لزوم
+function ensureUserExists($chat_id)
+{
+    global $database;
+
+    // بررسی وجود رکورد کاربر در جدول users
+    $userExists = $database->has("users", ["chat_id" => $chat_id]);
+
+    // اگر کاربر وجود ندارد، باید آن را اضافه کنیم
+    if (!$userExists) {
+        $database->insert("users", [
+            "chat_id" => $chat_id,
+            "created_at" => Medoo::raw('CURRENT_TIMESTAMP') // زمان ثبت کاربر
+        ]);
+    }
+
+    // سپس بررسی می‌کنیم که رکورد کاربر در جدول user_states وجود دارد یا خیر
+    $userStateExists = $database->has("user_states", ["chat_id" => $chat_id]);
+
+    if (!$userStateExists) {
+        // اگر رکورد user_state وجود ندارد، آن را اضافه می‌کنیم
+        $database->insert("user_states", [
+            "chat_id" => $chat_id,
+            "state" => 'new_user', // یا هر وضعیت پیش‌فرضی که می‌خواهید
+        ]);
+    }
+}
+
 
 function handleUserState($chat_id, $message)
 {
     global $database;
 
+    // دریافت وضعیت کاربر از دیتابیس
     $userState = $database->get("user_states", "state", ["chat_id" => $chat_id]);
 
     if ($userState === "in_chat") {
@@ -56,15 +92,34 @@ function handleUserState($chat_id, $message)
                 sendMessage($chat_id, "متاسفانه مشکلی در متوقف کردن چت به وجود آمده است.");
             }
         } else {
-            $response = sendMessageToAI($message);
+            $response = sendMessageToAI($message, $chat_id);
             sendMessage($chat_id, $response);
         }
         return;
     }
 
+    // دستور /contact برای ورود به چت دوطرفه
     if (strpos($message, '/contact') === 0) {
-        $database->update("user_states", ["state" => "in_chat"], ["chat_id" => $chat_id]);
-        sendMessage($chat_id, "شما وارد چت با هوش مصنوعی شدید. می‌توانید پیام خود را ارسال کنید.");
+        $updateResult = $database->update("user_states", ["state" => "in_chat"], ["chat_id" => $chat_id]);
+
+        if ($updateResult->rowCount() > 0) {
+            sendMessage($chat_id, "شما وارد چت با هوش مصنوعی شدید. می‌توانید پیام خود را ارسال کنید.");
+        } else {
+            sendMessage($chat_id, "متاسفانه مشکلی در شروع چت به وجود آمده است.");
+        }
+        return;
+    }
+
+    // دستور /start که باعث شروع چت می‌شود
+    if (strpos($message, '/start') === 0 && strpos($message, 'contact') !== false) {
+        // دستور start contact باید وارد چت هوش مصنوعی شود
+        $updateResult = $database->update("user_states", ["state" => "in_chat"], ["chat_id" => $chat_id]);
+
+        if ($updateResult->rowCount() > 0) {
+            sendMessage($chat_id, "شما وارد چت با هوش مصنوعی شدید. می‌توانید پیام خود را ارسال کنید.");
+        } else {
+            sendMessage($chat_id, "متاسفانه مشکلی در شروع چت به وجود آمده است.");
+        }
         return;
     }
 
@@ -74,7 +129,7 @@ function handleUserState($chat_id, $message)
     }
 }
 
-function sendMessageToAI($message)
+function sendMessageToAI($message, $chat_id)
 {
     $data = [
         'session_id' => AI_SESSION_ID,
@@ -98,7 +153,14 @@ function sendMessageToAI($message)
 
     if (curl_errno($ch)) {
         curl_close($ch);
-        return "متاسفانه مشکلی در ارتباط با هوش مصنوعی پیش آمد.";
+        return sendMessage($chat_id, "
+        متاسفم مشکلی با چت هوشمند ما پیش اومده لطفا با ادمین پشتیبانی ما در ارتباط باشید 
+        
+        - برای پشتیبانی از طریق تلگرام، لطفاً با [ادمین](https://t.me/maninickroshan) ما تماس بگیرید.
+        
+        ما همیشه در کنار شما هستیم! 💬
+        ");
+
     }
 
     $response_data = json_decode($response, true);

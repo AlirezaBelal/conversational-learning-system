@@ -1,9 +1,14 @@
 <?php
 
-sendMessage($chat_id, "
-اگر به کمک یا پشتیبانی نیاز دارید، تیم ما آماده است تا به شما کمک کند:
+function handleContactCommand($chat_id)
+{
+    global $database;
 
-- برای پشتیبانی از طریق تلگرام، لطفاً با [ادمین](https://t.me/maninickroshan) ما تماس بگیرید.
+    $updateResult = $database->update("user_states", ["state" => "in_chat"], ["chat_id" => $chat_id]);
 
-ما همیشه در کنار شما هستیم! 💬
-");
+    if ($updateResult->rowCount() > 0) {
+        sendMessage($chat_id, "شما وارد چت با هوش مصنوعی شدید. می‌توانید پیام خود را ارسال کنید.");
+    } else {
+        sendMessage($chat_id, "متاسفانه مشکلی در شروع چت به وجود آمده است.");
+    }
+}
