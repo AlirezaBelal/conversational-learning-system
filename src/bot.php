@@ -54,7 +54,7 @@ function handleUserState($chat_id, $message)
     if ($userState === "in_chat") {
         if (strpos($message, '/stop') === 0) {
             $database->update("user_states", ["state" => "new_user"], ["chat_id" => $chat_id]);
-            sendMessage($chat_id, "چت شما با هوش مصنوعی متوقف شد. اگر نیاز به کمک دارید، دوباره از /contact استفاده کنید.");
+            sendMessage($chat_id, "چت شما با هوش مصنوعی متوقف شد. اگر نیاز به کمک دارید، دوباره از /support استفاده کنید.");
         } else {
             $response = sendMessageToAI($message, $chat_id);
             sendMessage($chat_id, $response);
@@ -62,7 +62,7 @@ function handleUserState($chat_id, $message)
         return;
     }
 
-    if (strpos($message, '/contact') === 0) {
+    if (strpos($message, '/support') === 0) {
         $database->update("user_states", ["state" => "in_chat"], ["chat_id" => $chat_id]);
         sendMessage($chat_id, "شما وارد چت با هوش مصنوعی شدید. می‌توانید پیام خود را ارسال کنید.");
     }
@@ -99,7 +99,7 @@ function handleCommand($chat_id, $message)
     $commands = [
         '/help' => __DIR__ . '/../commands/help.php',
         '/courses' => __DIR__ . '/../commands/courses.php',
-        '/contact' => __DIR__ . '/../commands/contact.php',
+        '/support' => __DIR__ . '/../commands/support.php',
         '/interview' => __DIR__ . '/../commands/interview.php',
         '/start' => __DIR__ . '/../commands/start.php',
     ];
@@ -110,8 +110,8 @@ function handleCommand($chat_id, $message)
 
     if ($command === '/start' && $parameter) {
         switch ($parameter) {
-            case 'contact':
-                require_once $commands['/contact'];
+            case 'support':
+                require_once $commands['/support'];
                 break;
 
             case 'courses':
