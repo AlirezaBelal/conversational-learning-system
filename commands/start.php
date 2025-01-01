@@ -1,11 +1,11 @@
 <?php
 
 sendMessage($chat_id, "
-سلام! خوش آمدید. لطفاً یکی از گزینه‌های زیر را انتخاب کنید تا بتوانیم به شما کمک کنیم:
+سلام! خوش اومدی! 😊 
 
-🔹 برای مشاهده [دوره‌های آموزشی](https://t.me/acuLearn_bot?start=courses) موجود استفاده کنید.
-🔹 اگر می‌خواهید [آزمون دانش](https://t.me/acuLearn_bot?start=interview) را شروع کنید، از این لینک استفاده کنید.
-🔹 برای تماس با [پشتیبانی](https://t.me/acuLearn_bot?start=contact) کلیک کنید.
+🔹 [دوره‌های آموزشی](https://t.me/acuLearn_bot?start=courses)  
+🔹 [شخصی‌سازی مسیر](https://t.me/acuLearn_bot?start=interview)  
+🔹 [راهبری در مسیر](https://t.me/acuLearn_bot?start=contact)
 
-لطفاً لینک مورد نظر خود را انتخاب کنید یا دستور مرتبط را تایپ کنید.
+لطفاً یکی از گزینه‌ها رو انتخاب کن یا دستور مورد نظرت رو از منو بزن.
 ");
