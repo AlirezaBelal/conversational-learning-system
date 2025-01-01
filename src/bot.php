@@ -39,8 +39,45 @@ if (isset($update['message'])) {
         "received_at" => Medoo::raw('CURRENT_TIMESTAMP')
     ]);
 
+    // Handle user state
+    handleUserState($chat_id);
+
     // Command handling
     handleCommand($chat_id, $message);
+}
+
+// Function to handle user state (first-time message)
+function handleUserState($chat_id)
+{
+    global $database;
+
+    // Check if user already exists in users table
+    $user = $database->get("users", "*", ["chat_id" => $chat_id]);
+
+    if (!$user) {
+        // If user doesn't exist, insert into users table
+        $database->insert("users", [
+            "chat_id" => $chat_id,
+            "first_name" => "Unknown",  // Set a default name if needed
+            "last_name" => "Unknown",   // Set a default last name if needed
+            "username" => "Unknown",    // Set a default username if needed
+            "language_code" => "fa",    // Set a default language code if needed
+        ]);
+    }
+
+    // Now check if user already exists in user_states table
+    $userState = $database->get("user_states", "*", ["chat_id" => $chat_id]);
+
+    if (!$userState) {
+        // If user doesn't exist in user_states, insert with default state
+        $database->insert("user_states", [
+            "chat_id" => $chat_id,
+            "state" => "new_user"  // Initial state for new users
+        ]);
+
+        // Send a welcome message to the new user
+        sendMessage($chat_id, "سلام! به ربات ما خوش آمدید. برای شروع، لطفاً از دستور /help استفاده کنید.");
+    }
 }
 
 // Function to handle commands
@@ -100,7 +137,7 @@ function sendMessage($chat_id, $text)
         CURLOPT_URL => $url,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => http_build_query($data) // Ensuring correct encoding for POST data
+        CURLOPT_POSTFIELDS => http_build_query($data)
     ];
 
     $ch = curl_init();
