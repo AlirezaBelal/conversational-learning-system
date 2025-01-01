@@ -1,19 +1,17 @@
 <?php
 
 require 'vendor/autoload.php';
+require_once __DIR__ . '/utils.php';
 
 use Dotenv\Dotenv;
 use Medoo\Medoo;
 
-// Load environment variables
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../config');
 $dotenv->load();
 
-// Define constants
 define('API_URL', "https://api.telegram.org/bot" . $_ENV['TELEGRAM_BOT_TOKEN'] . "/");
 define('CHARSET', 'utf8mb4');
 
-// Initialize database connection
 $database = new Medoo([
     'database_type' => 'mysql',
     'database_name' => $_ENV['DB_DATABASE'],
@@ -23,100 +21,127 @@ $database = new Medoo([
     'charset' => CHARSET,
 ]);
 
-// Parse incoming data
 $content = file_get_contents("php://input");
 $update = json_decode($content, true);
 
-// Handle incoming message
 if (isset($update['message'])) {
     $chat_id = $update['message']['chat']['id'];
-    $message = $update['message']['text'];
+    $message = trim($update['message']['text']);
 
-    // Insert received message into database
-    $database->insert("messages", [
-        "chat_id" => $chat_id,
-        "message_text" => $message,
-        "received_at" => Medoo::raw('CURRENT_TIMESTAMP')
-    ]);
-
-    // Command handling
+    saveMessageToDatabase($chat_id, $message);
+    ensureUserExists($chat_id);
+    handleUserState($chat_id, $message);
     handleCommand($chat_id, $message);
 }
 
-// Function to handle commands
+function saveMessageToDatabase($chat_id, $message)
+{
+    global $database;
+
+    $database->insert("messages", [
+        "chat_id" => $chat_id,
+        "message_text" => $message,
+        "received_at" => Medoo::raw('CURRENT_TIMESTAMP'),
+    ]);
+}
+
+function handleUserState($chat_id, $message)
+{
+    global $database;
+
+    $userState = $database->get("user_states", "state", ["chat_id" => $chat_id]);
+
+    if ($userState === "in_chat") {
+        if (strpos($message, '/stop') === 0) {
+            $database->update("user_states", ["state" => "new_user"], ["chat_id" => $chat_id]);
+            sendMessage($chat_id, "چت شما با هوش مصنوعی متوقف شد. اگر نیاز به کمک دارید، دوباره از /support استفاده کنید.");
+        } else {
+            $response = sendMessageToAI($message, $chat_id);
+            sendMessage($chat_id, $response);
+        }
+        return;
+    }
+
+    if (strpos($message, '/support') === 0) {
+        $database->update("user_states", ["state" => "in_chat"], ["chat_id" => $chat_id]);
+        sendMessage($chat_id, "شما وارد چت با هوش مصنوعی شدید. می‌توانید پیام خود را ارسال کنید.");
+    }
+}
+
+function sendMessageToAI($message, $chat_id)
+{
+    $data = [
+        'session_id' => $_ENV['AI_SESSION_ID'],
+        'message' => $message,
+    ];
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $_ENV['AI_API_URL'],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($data),
+        CURLOPT_HTTPHEADER => [
+            'Authorization: Bearer ' . $_ENV['AI_API_KEY'],
+            'Content-Type: application/json',
+        ],
+    ]);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $response_data = json_decode($response, true);
+    return $response_data['response'] ?? "متاسفانه مشکلی در دریافت پاسخ از هوش مصنوعی پیش آمد.";
+}
+
 function handleCommand($chat_id, $message)
 {
     $commands = [
         '/help' => __DIR__ . '/../commands/help.php',
         '/courses' => __DIR__ . '/../commands/courses.php',
-        '/contact' => __DIR__ . '/../commands/contact.php',
+        '/support' => __DIR__ . '/../commands/support.php',
         '/interview' => __DIR__ . '/../commands/interview.php',
+        '/start' => __DIR__ . '/../commands/start.php',
     ];
 
-    // Check if it's a /start command
-    if (strpos($message, '/start') === 0) {
-        $params = explode(' ', $message);
-        if (isset($params[1])) {
-            $command = $params[1];
-            // Switch based on the command
-            switch ($command) {
-                case 'help':
-                case 'courses':
-                case 'contact':
-                    require_once __DIR__ . '/../commands/' . $command . '.php';
-                    break;
-                case 'interview':
-                    require_once __DIR__ . '/../commands/interview.php';
-                    break;
-                default:
-                    sendMessage($chat_id, "پارامتر نامعتبر است. لطفاً از دستور /help استفاده کنید.");
-                    break;
-            }
-        } else {
-            require_once __DIR__ . '/../commands/start.php';
+    $parts = explode(' ', trim($message));
+    $command = strtolower($parts[0]);
+    $parameter = isset($parts[1]) ? strtolower($parts[1]) : null;
+
+    if ($command === '/start' && $parameter) {
+        switch ($parameter) {
+            case 'support':
+                require_once $commands['/support'];
+                break;
+
+            case 'courses':
+                require_once $commands['/courses'];
+                break;
+
+            case 'interview':
+                require_once $commands['/interview'];
+                break;
+
+            default:
+                sendInvalidCommandMessage($chat_id);
+                break;
         }
+        return;
+    }
+
+    if (isset($commands[$command])) {
+        require_once $commands[$command];
     } else {
-        // Handle other commands
-        if (isset($commands[$message])) {
-            require_once $commands[$message];
-        } else {
-            sendMessage($chat_id, "دستور دریافت کردم: دستور ناشناخته. لطفاً از دستور /help استفاده کنید.");
-        }
+        sendInvalidCommandMessage($chat_id);
     }
 }
 
-// Function to send a message to Telegram API
-function sendMessage($chat_id, $text)
+function sendInvalidCommandMessage($chat_id)
 {
-    $url = API_URL . "sendMessage";
-    $data = [
-        'chat_id' => $chat_id,
-        'text' => $text,
-        'parse_mode' => 'Markdown',
-        'disable_web_page_preview' => true
-    ];
+    sendMessage($chat_id, "
+نفهمیدم چی گفتی! 😅 برای راهنمایی بیشتر، می‌تونی دستور /help رو بزن.
 
-    $options = [
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => http_build_query($data) // Ensuring correct encoding for POST data
-    ];
-
-    $ch = curl_init();
-    curl_setopt_array($ch, $options);
-    $response = curl_exec($ch);
-
-    // Check for cURL error
-    if ($response === false) {
-        error_log("Error sending message to Telegram API: " . curl_error($ch));
-    } else {
-        // Optionally log the response for debugging
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if ($http_code != 200) {
-            error_log("Telegram API response error: HTTP $http_code - $response");
-        }
-    }
-
-    curl_close($ch);
+اگه باگ یا فیدبکی داری، مستقیم می‌تونی از طریق لینک زیر با ما در ارتباط باشی:  
+[لینک ادمین](http://t.me/maninickroshan)
+");
 }
