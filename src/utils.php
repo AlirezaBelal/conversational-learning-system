@@ -1,5 +1,7 @@
 <?php
 
+use Medoo\Medoo;
+
 function sendMessage($chat_id, $text) {
     $url = API_URL . "sendMessage";
     $data = [
