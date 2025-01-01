@@ -1,3 +1,6 @@
 <?php
 
-sendMessage($chat_id, "آزمون دانش شما در حال شروع شدن است...");
+sendMessage($chat_id, "
+برای شروع آزمون نیازسنجی، لطفاً به بات اختصاصی نیازسنجی مراجعه کنید:  
+[لینک نیازسنجی](http://t.me/interview_aculearn_bot)
+");
