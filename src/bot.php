@@ -30,7 +30,6 @@ if (isset($update['message'])) {
 
     saveMessageToDatabase($chat_id, $message);
     ensureUserExists($chat_id);
-    handleUserState($chat_id, $message);
     handleCommand($chat_id, $message);
 }
 
@@ -43,55 +42,6 @@ function saveMessageToDatabase($chat_id, $message)
         "message_text" => $message,
         "received_at" => Medoo::raw('CURRENT_TIMESTAMP'),
     ]);
-}
-
-function handleUserState($chat_id, $message)
-{
-    global $database;
-
-    $userState = $database->get("user_states", "state", ["chat_id" => $chat_id]);
-
-    if ($userState === "in_chat") {
-        if (strpos($message, '/stop') === 0) {
-            $database->update("user_states", ["state" => "new_user"], ["chat_id" => $chat_id]);
-            sendMessage($chat_id, "چت شما با هوش مصنوعی متوقف شد. اگر نیاز به کمک دارید، دوباره از /support استفاده کنید.");
-        } else {
-            $response = sendMessageToAI($message, $chat_id);
-            sendMessage($chat_id, $response);
-        }
-        return;
-    }
-
-    if (strpos($message, '/support') === 0) {
-        $database->update("user_states", ["state" => "in_chat"], ["chat_id" => $chat_id]);
-        sendMessage($chat_id, "شما وارد چت با هوش مصنوعی شدید. می‌توانید پیام خود را ارسال کنید.");
-    }
-}
-
-function sendMessageToAI($message, $chat_id)
-{
-    $data = [
-        'session_id' => $_ENV['AI_SESSION_ID'],
-        'message' => $message,
-    ];
-
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $_ENV['AI_API_URL'],
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => json_encode($data),
-        CURLOPT_HTTPHEADER => [
-            'Authorization: Bearer ' . $_ENV['AI_API_KEY'],
-            'Content-Type: application/json',
-        ],
-    ]);
-
-    $response = curl_exec($ch);
-    curl_close($ch);
-
-    $response_data = json_decode($response, true);
-    return $response_data['response'] ?? "متاسفانه مشکلی در دریافت پاسخ از هوش مصنوعی پیش آمد.";
 }
 
 function handleCommand($chat_id, $message)
