@@ -1,27 +1,90 @@
-# Telegram Bot Project
+# Conversational Learning System
 
-This project is a Telegram bot built using PHP, Medoo (for database interaction), and Composer for dependency
-management.
+## Overview
+
+This project implements a Telegram-based learning system with persistent user state and structured interaction flows.
+
+It manages:
+
+* Conversational flows
+* User state tracking
+* Course and quiz delivery
+* Support and feedback handling
+
+---
+
+## System Design
+
+### 1. Bot Interface
+
+* Telegram bot as primary user interface
+* Command-based interaction system
+
+### 2. State Management
+
+* Stores user state in database
+* Supports multi-step interactions
+
+### 3. Content Delivery
+
+* Courses module
+* Quiz module
+* Support module
+
+---
+
+## Core Features
+
+* Structured learning flows
+* Quiz-based assessment system
+* User support channel
+* Persistent session handling
+
+---
+
+## Database Layer
+
+* MySQL based storage
+* User state tracking
+* Course and quiz data models
+
+---
+
+## Architecture
+
+Telegram API → Bot Logic → State Manager → Database → Response Engine
+
+---
 
 ## Requirements
 
-- PHP 7.4 or higher
-- Composer
-- MySQL Database
+* PHP 7.4+
+* Composer
+* MySQL
+* Telegram Bot API
+
+---
 
 ## Setup
 
-1. Clone the repository.
-2. Run `composer install` to install dependencies.
-3. Copy `.env.example` to `.env` and update the database and Telegram Bot token.
-4. Upload the project to your web server and set up a webhook.
+1. Install dependencies
+   composer install
 
-## Commands
+2. Configure environment
+   Copy .env.example to .env
+   Set database credentials and bot token
 
-- `/help` - Get help about the bot.
-- `/courses` - Get the list of available courses.
-- `/quiz` - Start a knowledge assessment quiz.
-- `/contact` - Contact support.
+3. Deploy to server
+   Upload to web server
+   Configure webhook endpoint
 
-## License
-This project is licensed under the MIT License.
+---
+
+## API Commands
+
+* /help → system guide
+* /courses → available courses
+* /quiz → start assessment flow
+* /contact → support channel
+
+---
