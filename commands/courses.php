@@ -1,7 +1,7 @@
 <?php
 
 sendMessage($chat_id, "
-**دوره‌های موجود:**
+*دوره‌های موجود:*
 
 1. [مدیریت محصول دیجیتال](https://t.me/pm_aculearn_bot)
 
