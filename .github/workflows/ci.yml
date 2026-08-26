@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.1', '8.2', '8.3', '8.4']
+        php-version: ['8.0', '8.1', '8.2', '8.3', '8.4']
 
     steps:
       - name: Check out repository
@@ -40,6 +40,14 @@ jobs:
 
       - name: Run router tests
         run: php tests/router_test.php
+
+      - name: Reject Telegram tokens in tracked files
+        shell: bash
+        run: |
+          if git grep -nE '[0-9]{8,12}:[A-Za-z0-9_-]{30,}' -- ':!README.md' ':!SECURITY.md'; then
+            echo 'A value matching a Telegram bot-token pattern is tracked in the repository.' >&2
+            exit 1
+          fi
 
       - name: Audit dependencies
         run: composer audit --no-interaction
