@@ -1,10 +1,10 @@
 {
-  "name": "aculearn/your-project-name",
-  "description": "A simple Telegram bot using PHP",
+  "name": "aculearn/conversational-learning-system",
+  "description": "A stateful Telegram learning gateway for course discovery, guided routing, and learner support.",
+  "type": "project",
   "require": {
     "php": "^8.0",
     "vlucas/phpdotenv": "^5.6",
-    "guzzlehttp/guzzle": "^7.0",
     "catfan/medoo": "^2.1"
   }
 }
