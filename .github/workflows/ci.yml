@@ -38,8 +38,13 @@ jobs:
       - name: Lint PHP files
         run: find . -type f -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
 
-      - name: Run router tests
-        run: php tests/router_test.php
+      - name: Run test suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test_file in tests/*_test.php; do
+            php "$test_file"
+          done
 
       - name: Reject Telegram tokens in tracked files
         shell: bash
@@ -48,6 +53,14 @@ jobs:
             echo 'A value matching a Telegram bot-token pattern is tracked in the repository.' >&2
             exit 1
           fi
+
+      - name: Enforce privacy defaults
+        shell: bash
+        run: |
+          grep -q '^STORE_RAW_MESSAGES=false$' config/.env.example
+          grep -q '^MESSAGE_RETENTION_DAYS=30$' config/.env.example
+          grep -q "APP_ENV=production" README.md
+          grep -q "scripts/purge_messages.php" README.md
 
       - name: Audit dependencies
         run: composer audit --no-interaction
