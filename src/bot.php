@@ -3,6 +3,8 @@
 require __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/router.php';
+require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/privacy.php';
 
 use Dotenv\Dotenv;
 use Medoo\Medoo;
@@ -16,17 +18,20 @@ $dbName = requiredEnv('DB_DATABASE');
 $dbUsername = requiredEnv('DB_USERNAME');
 $dbPassword = requiredEnv('DB_PASSWORD');
 
-define('API_URL', 'https://api.telegram.org/bot' . $telegramToken . '/');
-define('CHARSET', 'utf8mb4');
-
+$appEnv = strtolower(trim((string)($_ENV['APP_ENV'] ?? 'development')));
 $webhookSecret = trim((string)($_ENV['TELEGRAM_WEBHOOK_SECRET'] ?? ''));
+validateWebhookSecretConfiguration($appEnv, $webhookSecret);
+
 if ($webhookSecret !== '') {
     $providedSecret = (string)($_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? '');
-    if ($providedSecret === '' || !hash_equals($webhookSecret, $providedSecret)) {
+    if (!webhookSecretMatches($webhookSecret, $providedSecret)) {
         http_response_code(403);
         exit;
     }
 }
+
+define('API_URL', 'https://api.telegram.org/bot' . $telegramToken . '/');
+define('CHARSET', 'utf8mb4');
 
 $database = new Medoo([
     'database_type' => 'mysql',
