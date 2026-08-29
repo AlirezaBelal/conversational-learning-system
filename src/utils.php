@@ -100,7 +100,7 @@ function saveIncomingMessage(int|string $chatId, string $message): void
 
     $database->insert('messages', [
         'chat_id' => $chatId,
-        'message_text' => $message,
+        'message_text' => messageStorageValue($message),
         'received_at' => Medoo::raw('CURRENT_TIMESTAMP'),
     ]);
 }
