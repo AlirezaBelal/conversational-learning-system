@@ -182,6 +182,6 @@ This project demonstrates conversational product routing, state management, Tele
 
 The Persian conversational copy in `commands/` is product content used by the Telegram experience; the implementation and architecture remain framework-light PHP.
 
-## Licensing status
+## License
 
-No repository-wide open-source license is currently declared. Until a license is deliberately selected and added, do not assume permission to redistribute or relicense this repository's code or product content beyond applicable law and permissions. Third-party dependencies remain subject to their own licenses.
+The repository's original code and associated documentation are released under the MIT License. See `LICENSE`. Third-party dependencies remain subject to their own licenses.
