@@ -181,3 +181,7 @@ See `SECURITY.md` for the repository's credential-handling, webhook, and privacy
 This project demonstrates conversational product routing, state management, Telegram integration, learner-flow orchestration, privacy minimization, retention policy, and backend persistence. It does **not** claim that this repository contains an LLM, an autonomous tutor, or a complete learning-management system.
 
 The Persian conversational copy in `commands/` is product content used by the Telegram experience; the implementation and architecture remain framework-light PHP.
+
+## Licensing status
+
+No repository-wide open-source license is currently declared. Until a license is deliberately selected and added, do not assume permission to redistribute or relicense this repository's code or product content beyond applicable law and permissions. Third-party dependencies remain subject to their own licenses.
