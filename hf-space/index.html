@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conversational Learning System</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#0b0f14; --panel:#111821; --panel2:#161f2b; --line:#293445;
+      --text:#edf2f7; --muted:#a7b2c2; --accent:#7c3aed; --accent2:#4f46e5;
+      --ok:#22c55e; --shadow:0 18px 50px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0b0f14 0%,#0e131b 100%);color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .wrap{max-width:1180px;margin:0 auto;padding:28px}
+    .hero{margin-bottom:20px}
+    h1{margin:0 0 8px;font-size:34px;line-height:1.15}
+    .sub{color:var(--muted);max-width:820px;line-height:1.6}
+    .notice{margin:18px 0;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--accent);
+      background:rgba(124,58,237,.07);border-radius:10px;color:#d8def0}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+    label{display:block;color:var(--muted);font-size:13px;margin-bottom:8px}
+    select,button{width:100%;border-radius:10px;border:1px solid var(--line);font:inherit}
+    select{background:var(--panel2);color:var(--text);padding:12px}
+    button{margin-top:12px;padding:12px 14px;color:white;background:linear-gradient(90deg,var(--accent2),var(--accent));
+      border:none;font-weight:700;cursor:pointer}
+    button:hover{filter:brightness(1.08)}
+    .kv{display:grid;grid-template-columns:190px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+    .kv:last-child{border-bottom:none}
+    .k{color:var(--muted)}
+    .v{font-weight:600}
+    .route-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:#dce4f1;font-size:13px}
+    .arch{margin-top:18px}
+    code{background:#0a111a;border:1px solid var(--line);padding:3px 6px;border-radius:6px;color:#c7d2fe}
+    .footer{margin-top:18px;color:var(--muted);font-size:13px}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.wrap{padding:18px}h1{font-size:28px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>🎓 Conversational Learning System</h1>
+      <div class="sub">Interactive routing demo derived from the public Telegram learning gateway. It demonstrates product flow and deterministic command routing without connecting to Telegram or storing learner data.</div>
+      <div class="notice"><strong>Scope boundary:</strong> this demo does not claim to contain an LLM, autonomous tutor, production database, or full LMS.</div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <label for="command">Command / deep-link route</label>
+        <select id="command">
+          <option>/start</option>
+          <option>/help</option>
+          <option>/courses</option>
+          <option>/interview</option>
+          <option>/support</option>
+          <option>/contact</option>
+          <option>/start courses</option>
+          <option>/start interview</option>
+          <option>/start support</option>
+        </select>
+        <button id="routeBtn">Route learner</button>
+        <div class="route-list">
+          <span class="pill">/start</span><span class="pill">/courses</span><span class="pill">/interview</span>
+          <span class="pill">/support</span><span class="pill">/help</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="kv"><div class="k">Resolved learner state</div><div id="state" class="v">start</div></div>
+        <div class="kv"><div class="k">Flow</div><div id="title" class="v">Learner onboarding</div></div>
+        <div class="kv"><div class="k">System response</div><div id="message" class="v">Welcome. Choose a route: course discovery, personalized learning path, or learner support.</div></div>
+        <div class="kv"><div class="k">Suggested next routes</div><div id="next" class="v">/courses · /interview · /support · /help</div></div>
+      </div>
+    </section>
+
+    <section class="card arch">
+      <h2 style="margin-top:0">Production architecture represented</h2>
+      <p class="sub"><code>Telegram user → Bot API / webhook → authentication → learner state → command routing → dedicated learning/support flow</code></p>
+      <p class="footer">The Hugging Face demo intentionally stops at the routing boundary. Original project: github.com/AlirezaBelal/conversational-learning-system</p>
+    </section>
+  </main>
+
+  <script>
+    const routes = {
+      "/start": {state:"start", title:"Learner onboarding", message:"Welcome. Choose a route: course discovery, personalized learning path, or learner support.", next:["/courses","/interview","/support","/help"]},
+      "/help": {state:"help", title:"Available routes", message:"Available commands: /courses for course discovery, /interview for the personalized-learning path, /support or /contact for learner support.", next:["/courses","/interview","/support","/contact"]},
+      "/courses": {state:"courses", title:"Course discovery", message:"The learner is routed to the course-discovery experience. In production this hands off to the dedicated learning flow.", next:["/start","/interview","/support"]},
+      "/interview": {state:"interview", title:"Personalized learning path", message:"The learner is routed to the personalized-path / interview entry point. This demo shows routing only.", next:["/start","/courses","/support"]},
+      "/support": {state:"support", title:"Learner support", message:"The learner is routed to the support destination with explicit state handling.", next:["/start","/courses","/interview"]},
+      "/contact": {state:"support", title:"Learner support", message:"/contact is an alias for learner support and resolves to the same support state.", next:["/start","/courses","/interview"]}
+    };
+
+    function normalizeCommand(value){
+      let t=(value||"").trim().toLowerCase();
+      if(!t) return "/start";
+      if(t.startsWith("/start ")){
+        const p=t.split(/\s+/,2)[1];
+        if(["courses","interview","support"].includes(p)) return "/"+p;
+      }
+      if(!t.startsWith("/")) t="/"+t;
+      return t;
+    }
+
+    function render(){
+      const selected=document.getElementById("command").value;
+      const key=normalizeCommand(selected);
+      const data=routes[key] || {state:"unknown",title:"Unsupported command",message:"Unsupported route. Return to /help.",next:["/help"]};
+      document.getElementById("state").textContent=data.state;
+      document.getElementById("title").textContent=data.title;
+      document.getElementById("message").textContent=data.message;
+      document.getElementById("next").textContent=data.next.join(" · ");
+    }
+
+    document.getElementById("routeBtn").addEventListener("click",render);
+  </script>
+</body>
+</html>
