@@ -3,9 +3,8 @@ title: Conversational Learning System
 emoji: 🎓
 colorFrom: indigo
 colorTo: purple
-sdk: gradio
-app_file: app.py
-python_version: "3.12"
+sdk: static
+app_file: index.html
 pinned: false
 license: mit
 ---
@@ -24,7 +23,7 @@ The original project implements:
 - bounded retention policy
 - webhook authentication
 
-This Hugging Face Space intentionally demonstrates only the **product flow and routing semantics**.
+This Hugging Face Static Space intentionally demonstrates only the **product flow and routing semantics**.
 
 It does **not**:
 - connect to Telegram
