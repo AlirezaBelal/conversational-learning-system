@@ -68,6 +68,15 @@ try {
     $pdo->exec("UPDATE update_receipts SET processed_at='2000-01-01' WHERE update_id IN (99000001,99000002)");
     $counts = purgeLearnerMessages($pdo, 30);
     dbCheck($counts['messages'] === 2 && $counts['update_receipts'] === 2, 'bounded retention removes both row types');
+    $unknown = $update;
+    $unknown['update_id'] = 99000003;
+    $unknown['message']['text'] = 'unknown text';
+    processLearningUpdate($unknown, $pdo, fn() => true, 'acuLearn_bot');
+    dbCheck($pdo->query('SELECT state FROM user_states WHERE chat_id=99000001')->fetchColumn() === 'help', 'unknown text preserves existing route');
+    $unknown['update_id'] = 99000004;
+    $unknown['message']['chat']['id'] = 99000003;
+    processLearningUpdate($unknown, $pdo, fn() => true, 'acuLearn_bot');
+    dbCheck($pdo->query('SELECT state FROM user_states WHERE chat_id=99000003')->fetchColumn() === 'new_user', 'new unknown learner has initial state');
     // Database failure must happen before delivery and must not claim success.
     $pdo->exec('RENAME TABLE messages TO messages_unavailable');
     $before = $sent;
@@ -81,6 +90,6 @@ try {
     }
     fwrite(STDOUT, "MySQL processing, rollback, redelivery and retention tests passed.\n");
 } finally {
-    $pdo->exec('DELETE FROM users WHERE chat_id=99000001');
-    $pdo->exec('DELETE FROM update_receipts WHERE update_id IN (99000001,99000002)');
+    $pdo->exec('DELETE FROM users WHERE chat_id IN (99000001,99000003)');
+    $pdo->exec('DELETE FROM update_receipts WHERE update_id IN (99000001,99000002,99000003,99000004)');
 }

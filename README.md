@@ -93,7 +93,8 @@ edited_message updates follows the same routing contract with a distinct update 
 | `/support`, `/contact` | External support destination |
 
 `/start courses`, `/start interview` and `/start support` support deep links.
-Unknown commands receive a short Persian `/help` hint and do not invent a state.
+Unknown commands receive a short Persian `/help` hint, preserve an existing route,
+and initialize a new learner as `new_user`.
 Static Persian responses are in the five `commands/` modules. Markdown is static;
 user text is never interpolated into replies. Review those destination links when
 maintaining a fork; changing the gateway username also requires updating its

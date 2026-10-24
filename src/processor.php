@@ -31,10 +31,9 @@ function processLearningUpdate(array $update, PDO $pdo, callable $deliver, strin
         }
         $user = $pdo->prepare('INSERT INTO users (chat_id) VALUES (?) ON DUPLICATE KEY UPDATE chat_id=VALUES(chat_id)');
         $user->execute([$message['chat_id']]);
-        if ($module !== null) {
-            $state = $pdo->prepare('INSERT INTO user_states (chat_id, state) VALUES (?, ?) ON DUPLICATE KEY UPDATE state=VALUES(state)');
-            $state->execute([$message['chat_id'], $module]);
-        }
+        // Unknown text initializes new learners without resetting an existing route.
+        $state = $pdo->prepare('INSERT INTO user_states (chat_id, state) VALUES (?, ?) ON DUPLICATE KEY UPDATE state=COALESCE(?,state)');
+        $state->execute([$message['chat_id'], $module ?? 'new_user', $module]);
         $stored = $pdo->prepare('INSERT INTO messages (chat_id, message_text) VALUES (?, ?)');
         $stored->execute([$message['chat_id'], messageStorageValue($message['text'])]);
         if ($deliver($message['chat_id'], $reply) !== true) {
