@@ -37,6 +37,7 @@ foreach (['', '{', 'null', '[]', '{"update_id":"1"}', '{"update_id":-1}'] as $bo
 rejects(fn() => decodeWebhookUpdate(str_repeat('x', MAX_WEBHOOK_BYTES + 1)), 'actual size');
 check(learnerMessage(decodeWebhookUpdate('{"update_id":1,"callback_query":{}}')) === null, 'unsupported update');
 rejects(fn() => learnerMessage(['message' => ['chat' => ['id' => []], 'text' => '/start']]), 'malformed chat');
+rejects(fn() => learnerMessage(['message' => ['chat' => ['id' => 7], 'text' => str_repeat('x', 16385)]]), 'oversized text cannot poison raw storage');
 check(learnerMessage(['edited_message' => ['chat' => ['id' => 7], 'text' => '/help']])['chat_id'] === 7, 'edited message');
 check(!commandTargetsBot('/help@other_bot', 'acuLearn_bot'), 'foreign bot ignored');
 check(commandTargetsBot('/help@ACULEARN_BOT', 'acuLearn_bot'), 'own suffix case insensitive');

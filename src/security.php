@@ -52,6 +52,10 @@ function learnerMessage(array $update): ?array
     if (!is_array($message) || !isset($message['text']) || !is_string($message['text']) || trim($message['text']) === '') {
         return null;
     }
+    // Telegram text is at most 4096 characters; bound UTF-8 bytes before TEXT storage.
+    if (strlen($message['text']) > 16384) {
+        throw new InvalidArgumentException('Message text exceeds the Telegram text envelope.');
+    }
     $chat = $message['chat'] ?? null;
     if (!is_array($chat) || !isset($chat['id']) || !is_int($chat['id']) || $chat['id'] === 0
         || abs($chat['id']) > 4503599627370495) {
