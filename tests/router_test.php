@@ -15,6 +15,8 @@ assertSameValue(['/start', 'courses'], parseBotCommand('/start courses'), 'start
 assertSameValue(['/help', null], parseBotCommand('/help@acuLearn_bot'), 'command addressed to bot username');
 assertSameValue(['', null], parseBotCommand('   '), 'empty message');
 
+assertSameValue(['', null], parseBotCommand('/help@other!'), 'malformed addressed command');
+
 assertSameValue('start', resolveBotModule('/start'), 'start route');
 assertSameValue('courses', resolveBotModule('/start', 'courses'), 'courses deep link');
 assertSameValue('interview', resolveBotModule('/interview'), 'interview route');

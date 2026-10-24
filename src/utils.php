@@ -1,106 +1,69 @@
 <?php
 
-use Medoo\Medoo;
+require_once __DIR__ . '/privacy.php';
 
 function requiredEnv(string $name): string
 {
-    $value = trim((string)($_ENV[$name] ?? ''));
+    $value = configurationValue($name);
     if ($value === '') {
         throw new RuntimeException("Missing required environment variable: {$name}");
     }
     return $value;
 }
 
+/** No retries here: the webhook returns 503 on delivery failure. */
 function sendMessage(int|string $chatId, string $text): bool
 {
-    $url = API_URL . 'sendMessage';
-    $data = [
-        'chat_id' => $chatId,
-        'text' => $text,
-        'parse_mode' => 'Markdown',
-        'disable_web_page_preview' => true,
-    ];
-
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => http_build_query($data),
-        CURLOPT_CONNECTTIMEOUT => 5,
-        CURLOPT_TIMEOUT => 15,
-    ]);
-
-    $response = curl_exec($ch);
-    $statusCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlFailed = $response === false;
-    curl_close($ch);
-
-    if ($curlFailed || $statusCode < 200 || $statusCode >= 300) {
-        error_log('Telegram sendMessage request failed.');
+    $ch = curl_init(API_URL . 'sendMessage');
+    if ($ch === false) {
         return false;
     }
-
-    $payload = json_decode((string)$response, true);
-    return is_array($payload) && ($payload['ok'] ?? false) === true;
-}
-
-function ensureUserExists(array $message): void
-{
-    global $database;
-
-    $chatId = $message['chat']['id'] ?? null;
-    if ($chatId === null) {
-        return;
-    }
-
-    $from = is_array($message['from'] ?? null) ? $message['from'] : [];
-    $profile = [
-        'first_name' => $from['first_name'] ?? null,
-        'last_name' => $from['last_name'] ?? null,
-        'username' => $from['username'] ?? null,
-        'language_code' => $from['language_code'] ?? null,
-    ];
-
-    if ($database->has('users', ['chat_id' => $chatId])) {
-        $database->update('users', $profile, ['chat_id' => $chatId]);
-    } else {
-        $database->insert('users', array_merge(
-            ['chat_id' => $chatId, 'created_at' => Medoo::raw('CURRENT_TIMESTAMP')],
-            $profile
-        ));
-    }
-
-    if (!$database->has('user_states', ['chat_id' => $chatId])) {
-        $database->insert('user_states', [
-            'chat_id' => $chatId,
-            'state' => 'new_user',
+    try {
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query([
+                'chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'Markdown',
+                'disable_web_page_preview' => true,
+            ]),
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 15,
         ]);
+        $body = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        return telegramDeliverySucceeded($status, $body);
+    } catch (Throwable) {
+        error_log('Telegram transport failed.');
+        return false;
+    } finally {
+        curl_close($ch);
     }
 }
 
-function setUserState(int|string $chatId, string $state): void
+function telegramDeliverySucceeded(int $status, string|bool $body): bool
 {
-    global $database;
-
-    if ($database->has('user_states', ['chat_id' => $chatId])) {
-        $database->update('user_states', ['state' => $state], ['chat_id' => $chatId]);
-        return;
+    if ($body === false || $status < 200 || $status >= 300) {
+        error_log('Telegram transport or HTTP failure.');
+        return false;
     }
-
-    $database->insert('user_states', [
-        'chat_id' => $chatId,
-        'state' => $state,
-    ]);
+    $payload = json_decode($body, true);
+    $success = is_array($payload) && ($payload['ok'] ?? null) === true;
+    if (!$success) {
+        error_log('Telegram API rejected the message or returned invalid JSON.');
+    }
+    return $success;
 }
 
-function saveIncomingMessage(int|string $chatId, string $message): void
+function openLearningDatabase(): PDO
 {
-    global $database;
-
-    $database->insert('messages', [
-        'chat_id' => $chatId,
-        'message_text' => messageStorageValue($message),
-        'received_at' => Medoo::raw('CURRENT_TIMESTAMP'),
+    $database = new Medoo\Medoo([
+        'type' => 'mysql', 'host' => requiredEnv('DB_SERVER'),
+        'port' => (int)configurationValue('DB_PORT', '3306'),
+        'database' => requiredEnv('DB_DATABASE'), 'username' => requiredEnv('DB_USERNAME'),
+        'password' => requiredEnv('DB_PASSWORD'), 'charset' => 'utf8mb4',
+        'error' => PDO::ERRMODE_EXCEPTION,
     ]);
+    $database->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $database->pdo->exec("SET time_zone = '+00:00'");
+    return $database->pdo;
 }

@@ -13,6 +13,18 @@ jobs:
   php:
     name: PHP ${{ matrix.php-version }}
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test-only-password
+          MYSQL_ROOT_HOST: '%'
+          MYSQL_DATABASE: learning_gateway_test
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ptest-only-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
     strategy:
       fail-fast: false
       matrix:
@@ -20,7 +32,9 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -39,6 +53,12 @@ jobs:
         run: find . -type f -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
 
       - name: Run test suite
+        env:
+          TEST_DATABASE_DSN: mysql:host=127.0.0.1;port=${{ job.services.mysql.ports[3306] }};dbname=learning_gateway_test;charset=utf8mb4
+          TEST_DATABASE_USER: root
+          TEST_DATABASE_PASSWORD: test-only-password
+          TEST_DATABASE_PORT: ${{ job.services.mysql.ports[3306] }}
+          REQUIRE_DATABASE_TEST: 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -49,7 +69,7 @@ jobs:
       - name: Reject Telegram tokens in tracked files
         shell: bash
         run: |
-          if git grep -nE '[0-9]{8,12}:[A-Za-z0-9_-]{30,}' -- ':!README.md' ':!SECURITY.md'; then
+          if git grep -lE '[0-9]{8,12}:[A-Za-z0-9_-]{30,}'; then
             echo 'A value matching a Telegram bot-token pattern is tracked in the repository.' >&2
             exit 1
           fi

@@ -1,8 +1,14 @@
 <?php
 
+function configurationValue(string $name, string $default = ''): string
+{
+    $value = $_ENV[$name] ?? getenv($name);
+    return $value === false ? $default : (string)$value;
+}
+
 function envFlag(string $name, bool $default = false): bool
 {
-    $raw = strtolower(trim((string)($_ENV[$name] ?? '')));
+    $raw = strtolower(trim(configurationValue($name)));
     if ($raw === '') {
         return $default;
     }
@@ -29,7 +35,7 @@ function messageStorageValue(string $message): string
 
 function messageRetentionDays(): int
 {
-    $raw = trim((string)($_ENV['MESSAGE_RETENTION_DAYS'] ?? '30'));
+    $raw = trim(configurationValue('MESSAGE_RETENTION_DAYS', '30'));
     if ($raw === '' || !ctype_digit($raw)) {
         throw new RuntimeException('MESSAGE_RETENTION_DAYS must be an integer between 1 and 3650.');
     }
