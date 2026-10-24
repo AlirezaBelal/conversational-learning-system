@@ -23,13 +23,14 @@ function assertThrowsRuntime(callable $callback, string $label): void
     exit(1);
 }
 
-validateWebhookSecretConfiguration('development', '');
+validateWebhookSecretConfiguration('development', '', true);
+assertThrowsRuntime(fn() => validateWebhookSecretConfiguration('development', ''), 'development requires explicit acknowledgement');
 validateWebhookSecretConfiguration('production', 'configured-secret');
 assertThrowsRuntime(
     fn() => validateWebhookSecretConfiguration('production', ''),
     'production requires webhook secret'
 );
-assertSameValueStrict(true, webhookSecretMatches('', ''), 'development-compatible empty secret');
+assertSameValueStrict(false, webhookSecretMatches('', ''), 'empty secrets never authenticate');
 assertSameValueStrict(true, webhookSecretMatches('secret', 'secret'), 'matching webhook secret');
 assertSameValueStrict(false, webhookSecretMatches('secret', ''), 'missing webhook header');
 assertSameValueStrict(false, webhookSecretMatches('secret', 'wrong'), 'incorrect webhook header');

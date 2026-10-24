@@ -1,50 +1,30 @@
 # Security
 
-## Secrets
+Expose only `public/` over HTTPS with PHP error display disabled. Never serve the
+repository root, config/.env, SQL dumps, internal scripts, dependencies or logs.
+Technical diagnostics are intentionally generic and contain no raw update bodies,
+SQL errors, Telegram response bodies, bot-token URLs or configured secret values.
 
-Do not commit live credentials to this repository.
+Production is the default. Configure a random `TELEGRAM_WEBHOOK_SECRET` matching
+Telegram's secret-token format and use the same value when registering the webhook.
+Missing configuration fails closed; missing/incorrect request headers return 403.
+Explicit unauthenticated development is restricted to an isolated loopback listener;
+never enable it behind a public proxy or tunnel. See README for request limits.
 
-Runtime values such as the Telegram bot token, database password, webhook secret, and administrator identifiers belong in `config/.env` or the deployment platform's secret store. The tracked `config/.env.example` file must contain placeholders only.
+New requests retain chat ID and route state, not Telegram profile names/usernames.
+Raw text is off by default. Message byte-length metadata and update receipts still
+have a lifecycle: run `php scripts/purge_messages.php` daily, monitor its exit code,
+and separately define erasure of learner state and legacy profile/raw-message data.
+A retention setting without an executed purge is not automatic deletion.
 
-If a real credential has ever been committed, copied into a public log, or shared through an insecure channel, rotate or revoke it. Removing the value from the current branch is not sufficient because Git history and external caches may retain older copies.
+Delivery is not exact-once. A Telegram acknowledgement followed by a failed commit,
+or a lost acknowledgement, can result in a duplicate reply on redelivery. Failed
+processing rolls back learner writes and receipt; committed receipts suppress replay
+until expiry. Use InnoDB, a minimally privileged runtime account and separate schema
+credentials. Test migrations/backup recovery before modifying existing installations.
 
-## Telegram webhook
-
-Production deployments are fail-closed:
-
-1. Set `APP_ENV=production`.
-2. Configure a strong `TELEGRAM_WEBHOOK_SECRET` outside source control.
-3. Register the Telegram webhook using the same secret token.
-4. Requests without the matching `X-Telegram-Bot-Api-Secret-Token` header are rejected with HTTP 403.
-5. If the production secret is missing, application startup fails rather than accepting unauthenticated webhook traffic.
-6. Serve the webhook over HTTPS only.
-
-Development environments may omit the secret for local testing, but that mode must not be used for public production traffic.
-
-## Data minimization and retention
-
-Incoming message text is **not retained by default**. With `STORE_RAW_MESSAGES=false`, the database stores a redacted marker containing the message byte length rather than the original content.
-
-Only enable `STORE_RAW_MESSAGES=true` when there is a documented product or operational need, an appropriate privacy notice, and a justified retention period.
-
-`MESSAGE_RETENTION_DAYS` defaults to 30 days and is bounded to 1–3650. Enforce the lifecycle by scheduling:
-
-```bash
-php scripts/purge_messages.php
-```
-
-Existing deployments that previously stored raw messages should separately purge or migrate those historical rows according to their applicable privacy requirements.
-
-## Logging
-
-Avoid logging raw request URLs that contain credentials. Application error logging should remain generic and must not include the Telegram bot token, database password, webhook secret, full request body, or full secret-bearing environment values.
-
-## Database
-
-Use a dedicated database user with only the permissions required by this application. Do not reuse administrative database credentials for the bot.
-
-The included `bot_database.sql` is intended for a fresh installation. Apply explicit migrations to existing production databases rather than replacing schemas directly.
-
-## Reporting
-
-For a privately discovered vulnerability, contact the repository owner directly rather than publishing credentials or exploit details in a public issue.
+Do not publish credentials or sensitive updates in an issue. Report a vulnerability
+privately through GitHub's private reporting option if available, or ask the owner
+for a private channel without disclosing details. Rotate/revoke exposed credentials;
+removal from the latest revision does not invalidate Git history or external copies.
+No regulatory-compliance or independently audited production-security claim is made.

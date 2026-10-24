@@ -1,6 +1,6 @@
 <?php
 
-sendMessage($chat_id, "
+return "
 سلام! من اینجام که کمکت کنم. 😊
 
 دستورهای اصلی:
@@ -17,4 +17,4 @@ sendMessage($chat_id, "
 [راهبری در مسیر](https://t.me/acuLearn_bot?start=support)
 
 برای گزارش باگ یا فیدبک، با [پشتیبان](https://t.me/maninickroshan) در ارتباط باش.
-");
+";
