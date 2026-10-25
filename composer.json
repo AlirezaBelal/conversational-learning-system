@@ -1,6 +1,6 @@
 {
-  "name": "aculearn/conversational-learning-system",
-  "description": "A stateful Telegram learning gateway for course discovery, guided routing, and learner support.",
+  "name": "aculearn/telegram-learning-gateway",
+  "description": "A privacy-conscious Telegram learning gateway for course discovery, deep links, and learner support.",
   "type": "project",
   "require": {
     "php": "^8.0",

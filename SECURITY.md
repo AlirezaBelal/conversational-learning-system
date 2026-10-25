@@ -1,5 +1,11 @@
 # Security
 
+The GitHub repository is named **telegram-learning-gateway**. Renaming the
+source repository does not change Telegram BotFather usernames, webhook
+secrets, token validity, database credentials or live deployment URLs.
+Operators must independently update hard-coded clone/CI links and verify
+webhook registrations in their own environments.
+
 Expose only `public/` over HTTPS with PHP error display disabled. Never serve the
 repository root, config/.env, SQL dumps, internal scripts, dependencies or logs.
 Technical diagnostics are intentionally generic and contain no raw update bodies,

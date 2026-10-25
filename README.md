@@ -1,11 +1,37 @@
-# Conversational Learning System
+# Telegram Learning Gateway
 
-[![CI](https://github.com/AlirezaBelal/conversational-learning-system/actions/workflows/ci.yml/badge.svg)](https://github.com/AlirezaBelal/conversational-learning-system/actions/workflows/ci.yml)
+[![CI](https://github.com/AlirezaBelal/telegram-learning-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/AlirezaBelal/telegram-learning-gateway/actions/workflows/ci.yml)
 
 A small Telegram learning gateway: Persian menus, course-bot links, deep links and
 minimal learner state. It is not an LMS, AI tutor or autonomous support service.
 The linked bots provide their own experiences; their continued operation is not
 verified by this repository's tests. No live bot is required to test this source.
+
+The source repository's new canonical identity is
+`AlirezaBelal/telegram-learning-gateway`. The descriptive name refers to a
+Telegram gateway, **not** a conversational AI model, hosted learning platform
+or complete learning-management system.
+
+## Repository name and migration
+
+The canonical repository name is **telegram-learning-gateway**. To update an
+existing local checkout after its owner changes the name in GitHub Settings:
+
+```bash
+git remote set-url origin https://github.com/AlirezaBelal/telegram-learning-gateway.git
+git remote -v
+```
+
+Use the new URL for all future documentation, clone commands, CI badges and
+external links. GitHub normally redirects the old repository URL; update
+hard-coded URLs and any integrations anyway. If another workflow imports this
+repository as a GitHub Action, its action reference must be updated explicitly.
+
+**The repository rename does not rename or migrate your live Telegram bot.**
+`TELEGRAM_BOT_USERNAME`, Telegram BotFather configuration, webhook URLs, the
+external course/support bot links, MySQL database/schema and existing secret
+values are independent operational settings. Change them only through a
+separate tested deployment plan; do not expose credentials while migrating.
 
 ## Requirements and setup
 
