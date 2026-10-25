@@ -79,6 +79,9 @@ only for an isolated local listener, never a public tunnel or reverse proxy. The
 application does not trust forwarded IP headers. A secret is simpler and safer.
 
 Unsupported updates and messages without text are acknowledged without storage.
+**Only private chats** with the gateway are processed: known group, supergroup
+and channel chat types are ignored without persisting learner state. Messages
+without a chat type retain backward compatibility with older integrations.
 Commands addressed to another bot are ignored. Supported text in message or
 edited_message updates follows the same routing contract with a distinct update ID.
 
@@ -96,9 +99,12 @@ edited_message updates follows the same routing contract with a distinct update 
 Unknown commands receive a short Persian `/help` hint, preserve an existing route,
 and initialize a new learner as `new_user`.
 Static Persian responses are in the five `commands/` modules. Markdown is static;
-user text is never interpolated into replies. Review those destination links when
-maintaining a fork; changing the gateway username also requires updating its
-static deep links in start/help copy. External bot availability is not guaranteed.
+user text is never interpolated into replies. The gateway's **own** `/start`
+deep links in the start/help copy now use the configured, syntax-validated
+`TELEGRAM_BOT_USERNAME`; changing that variable no longer requires editing
+these modules. Independent course, interview and support bot links remain fixed,
+so operators must review their ownership and availability separately.
+External bot availability is not guaranteed.
 
 ## Persistence, deduplication and delivery
 

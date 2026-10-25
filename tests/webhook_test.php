@@ -39,6 +39,13 @@ check(learnerMessage(decodeWebhookUpdate('{"update_id":1,"callback_query":{}}'))
 rejects(fn() => learnerMessage(['message' => ['chat' => ['id' => []], 'text' => '/start']]), 'malformed chat');
 rejects(fn() => learnerMessage(['message' => ['chat' => ['id' => 7], 'text' => str_repeat('x', 16385)]]), 'oversized text cannot poison raw storage');
 check(learnerMessage(['edited_message' => ['chat' => ['id' => 7], 'text' => '/help']])['chat_id'] === 7, 'edited message');
+check(learnerMessage(['message' => ['chat' => ['id' => 7, 'type' => 'private'], 'text' => '/help']])['chat_id'] === 7, 'private chat accepted');
+foreach (['group', 'supergroup', 'channel'] as $type) {
+    check(learnerMessage(['message' => ['chat' => ['id' => -1001234, 'type' => $type], 'text' => '/help']]) === null, 'nonprivate message ignored');
+    check(learnerMessage(['edited_message' => ['chat' => ['id' => -1001234, 'type' => $type], 'text' => '/help']]) === null, 'nonprivate edit ignored');
+}
+rejects(fn() => learnerMessage(['message' => ['chat' => ['id' => 7, 'type' => []], 'text' => '/help']]), 'malformed chat type');
+check(learnerMessage(['message' => ['chat' => ['id' => 7], 'text' => '/help']])['chat_id'] === 7, 'legacy missing chat type stays compatible');
 check(!commandTargetsBot('/help@other_bot', 'acuLearn_bot'), 'foreign bot ignored');
 check(commandTargetsBot('/help@ACULEARN_BOT', 'acuLearn_bot'), 'own suffix case insensitive');
 foreach (['start', 'help', 'courses', 'interview', 'support'] as $module) {

@@ -11,6 +11,12 @@ Missing configuration fails closed; missing/incorrect request headers return 403
 Explicit unauthenticated development is restricted to an isolated loopback listener;
 never enable it behind a public proxy or tunnel. See README for request limits.
 
+Only private learner chats are processed when Telegram includes a chat type;
+group, supergroup and channel messages are ignored without storing state.
+A missing chat type remains accepted for compatibility with older fixtures.
+The gateway username is syntax-validated before placing its own deep links
+in replies; unrelated course/support destinations remain explicitly fixed.
+
 New requests retain chat ID and route state, not Telegram profile names/usernames.
 Raw text is off by default. Message byte-length metadata and update receipts still
 have a lifecycle: run `php scripts/purge_messages.php` daily, monitor its exit code,
