@@ -59,11 +59,22 @@ function commandTargetsBot(string $text, string $username): bool
     return strcasecmp($matches[1], $username) === 0;
 }
 
-function commandReply(?string $module): string
+function commandReply(?string $module, string $botUsername = 'acuLearn_bot'): string
 {
     $allowed = ['start', 'help', 'courses', 'interview', 'support'];
     if ($module === null || !in_array($module, $allowed, true)) {
         return "متوجه منظورت نشدم. برای دیدن راهنما، دستور /help را بفرست. 🙂";
     }
-    return require __DIR__ . '/../commands/' . $module . '.php';
+    if (preg_match('/\\A[A-Za-z][A-Za-z0-9_]{4,31}\\z/D', $botUsername) !== 1) {
+        throw new InvalidArgumentException('Invalid Telegram bot username configuration.');
+    }
+
+    $reply = require __DIR__ . '/../commands/' . $module . '.php';
+    // Only the gateway's own deep links are configurable. Do not rewrite the
+    // independent course, interview, or human support bot destinations.
+    return str_replace(
+        'https://t.me/acuLearn_bot?start=',
+        'https://t.me/' . $botUsername . '?start=',
+        $reply
+    );
 }

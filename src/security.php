@@ -61,5 +61,16 @@ function learnerMessage(array $update): ?array
         || abs($chat['id']) > 4503599627370495) {
         throw new InvalidArgumentException('Invalid Telegram chat identifier.');
     }
+    // This gateway stores per-learner route state and is intended for private
+    // chats. Telegram includes "type" on real updates; missing type remains
+    // accepted for older test fixtures and existing integrations.
+    if (array_key_exists('type', $chat)) {
+        if (!is_string($chat['type'])) {
+            throw new InvalidArgumentException('Invalid Telegram chat type.');
+        }
+        if ($chat['type'] !== 'private') {
+            return null;
+        }
+    }
     return ['chat_id' => $chat['id'], 'text' => trim($message['text'])];
 }

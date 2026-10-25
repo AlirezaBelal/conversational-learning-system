@@ -16,7 +16,7 @@ function processLearningUpdate(array $update, PDO $pdo, callable $deliver, strin
     }
     [$command, $parameter] = parseBotCommand($message['text']);
     $module = resolveBotModule($command, $parameter);
-    $reply = commandReply($module);
+    $reply = commandReply($module, $username);
     $pdo->beginTransaction();
     try {
         try {
